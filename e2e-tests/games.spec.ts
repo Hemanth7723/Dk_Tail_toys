@@ -24,6 +24,23 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should filter games by category and publisher', async ({ page }) => {
+    await test.step('Select a category and publisher', async () => {
+      await page.goto('/');
+      await page.locator('label').filter({ hasText: 'Strategy' }).locator('input[type="checkbox"]').check();
+      await page.getByTestId('publisher-filter').selectOption({ label: 'CodeForge Studios' });
+      await page.getByTestId('apply-filters').click();
+    });
+
+    await test.step('Verify the combined filters are reflected in the URL and results', async () => {
+      await expect(page).toHaveURL(/category=\d+&publisher=\d+/);
+      await expect(page.getByTestId('filter-results')).toHaveText('Showing 1 of 21 games');
+      const visibleGameCards = page.locator('[data-testid="game-card"]:visible');
+      await expect(visibleGameCards).toHaveCount(1);
+      await expect(visibleGameCards.getByTestId('game-title')).toHaveText('DevOps Dominion');
+    });
+  });
+
   test('should navigate to correct game details page when clicking on a game', async ({ page }) => {
     let gameId: string | null;
     let gameTitle: string | null;
